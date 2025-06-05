@@ -1,8 +1,6 @@
-import { authUsers, fromAuthUser, userProjects, type AuthUser } from '@onlook/db';
-
-import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
+import { Collection } from '@onlook/db';
 
 export const memberRouter = createTRPCRouter({
     list: protectedProcedure
@@ -12,31 +10,20 @@ export const memberRouter = createTRPCRouter({
             }),
         )
         .query(async ({ ctx, input }) => {
-            const members = await ctx.db
-                .select()
-                .from(userProjects)
-                .innerJoin(authUsers, eq(userProjects.userId, authUsers.id))
-                .where(eq(userProjects.projectId, input.projectId));
-
-            return members.map((member) => {
+            const projectMembersSnapshot = await ctx.db.collectionGroup('projects').where('projectId', '==', input.projectId).get();
+            const members = await Promise.all(projectMembersSnapshot.docs.map(async (doc) => {
+                const userDoc = await doc.ref.parent.parent!.get();
                 return {
-                    ...member.user_projects,
-                    user: fromAuthUser(member.users),
+                    ...doc.data(),
+                    user: userDoc.data(),
                 };
-            });
+            }));
+            return members;
         }),
     remove: protectedProcedure
         .input(z.object({ userId: z.string(), projectId: z.string() }))
         .mutation(async ({ ctx, input }) => {
-            await ctx.db
-                .delete(userProjects)
-                .where(
-                    and(
-                        eq(userProjects.userId, input.userId),
-                        eq(userProjects.projectId, input.projectId),
-                    ),
-                );
-
+            await ctx.db.collection(Collection.USERS).doc(input.userId).collection('projects').doc(input.projectId).delete();
             return true;
         }),
 });

@@ -1,4 +1,4 @@
-import { getFileUrlFromStorage } from '@/utils/supabase/client';
+import { getFileUrlFromStorage } from '@/utils/firebase/storage';
 import { STORAGE_BUCKETS } from '@onlook/constants';
 import type { Project } from '@onlook/models';
 import { Icons } from '@onlook/ui/icons';
@@ -108,7 +108,8 @@ export const Carousel: React.FC<CarouselProps> = ({ slides, onSlideChange }) => 
             const images: { [key: string]: string } = {};
             for (const slide of slides) {
                 if (slide.metadata.previewImg) {
-                    const img = await getFileUrlFromStorage(STORAGE_BUCKETS.PREVIEW_IMAGES, slide.metadata.previewImg.storagePath?.path ?? '');
+                    const path = `${STORAGE_BUCKETS.PREVIEW_IMAGES}/${slide.metadata.previewImg.storagePath?.path ?? ''}`;
+                    const img = await getFileUrlFromStorage(path);
                     if (img) {
                         images[slide.id] = img;
                     } else {

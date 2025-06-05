@@ -1,7 +1,6 @@
-import { canvases, canvasUpdateSchema, toCanvas } from '@onlook/db';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
+import { Collection } from '@onlook/db';
 
 export const canvasRouter = createTRPCRouter({
     get: protectedProcedure
@@ -11,20 +10,22 @@ export const canvasRouter = createTRPCRouter({
             }),
         )
         .query(async ({ ctx, input }) => {
-            const dbCanvas = await ctx.db.query.canvases.findFirst({
-                where: eq(canvases.projectId, input.projectId),
-            });
-            if (!dbCanvas) {
+            const canvasSnapshot = await ctx.db.collection(Collection.PROJECTS).doc(input.projectId).collection(Collection.CANVAS).limit(1).get();
+            if (canvasSnapshot.empty) {
                 return null;
             }
-            return dbCanvas;
+            return canvasSnapshot.docs[0].data();
         }),
-    update: protectedProcedure.input(canvasUpdateSchema).mutation(async ({ ctx, input }) => {
+    update: protectedProcedure.input(
+        z.object({
+            id: z.string(),
+            projectId: z.string(),
+            // Add other canvas properties here as needed, for now we'll allow any
+        }).passthrough()
+    ).mutation(async ({ ctx, input }) => {
         try {
-            if (!input.id) {
-                throw new Error('Canvas ID is required');
-            }
-            await ctx.db.update(canvases).set(input).where(eq(canvases.id, input.id));
+            const { id, projectId, ...dataToUpdate } = input;
+            await ctx.db.collection(Collection.PROJECTS).doc(projectId).collection(Collection.CANVAS).doc(id).set(dataToUpdate, { merge: true });
             return true;
         } catch (error) {
             console.error('Error updating canvas', error);

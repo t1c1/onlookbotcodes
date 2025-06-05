@@ -1,63 +1,55 @@
 'use server';
 
-import { Routes } from '@/utils/constants';
-import { createClient } from '@/utils/supabase/server';
-import { SEED_USER } from '@onlook/db';
-import { SignInMethod } from '@onlook/models';
+import {
+  getRedirectResult,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithRedirect,
+} from 'firebase/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { auth } from '@onlook/db/firebase';
+import { SEED_USER } from '@onlook/db';
+import { SignInMethod } from '@onlook/models';
+import { Routes } from '@/utils/constants';
+
 export async function login(provider: SignInMethod) {
-    const supabase = await createClient();
-    const origin = (await headers()).get('origin');
+  const origin = (await headers()).get('origin');
+  const googleProvider = new GoogleAuthProvider();
 
-    // If already session, redirect
-    const {
-        data: { session },
-    } = await supabase.auth.getSession();
-    if (session) {
-        redirect('/');
-    }
+  // We can add more providers here based on the `provider` argument
+  switch (provider) {
+    case 'google':
+      await signInWithRedirect(auth, googleProvider);
+      break;
+    default:
+      throw new Error(`Provider ${provider} not supported`);
+  }
+}
 
-    // Start OAuth flow
-    // Note: User object will be created in the auth callback route if it doesn't exist
-    const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-            redirectTo: `${origin}/auth/callback`,
-        },
-    });
-
-    if (error) {
-        redirect('/error');
-    }
-
-    redirect(data.url);
+export async function handleRedirect() {
+  const result = await getRedirectResult(auth);
+  if (result) {
+    // User is signed in.
+    // You can get the user info from result.user
+    redirect(Routes.HOME);
+  } else {
+    // Handle the case where there is no redirect result
+    redirect('/login');
+  }
 }
 
 export async function devLogin() {
-    if (process.env.NODE_ENV !== 'development') {
-        throw new Error('Dev login is only available in development mode');
-    }
+  if (process.env.NODE_ENV !== 'development') {
+    throw new Error('Dev login is only available in development mode');
+  }
 
-    const supabase = await createClient();
-
-    const {
-        data: { session },
-    } = await supabase.auth.getSession();
-    if (session) {
-        redirect('/');
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: SEED_USER.EMAIL,
-        password: SEED_USER.PASSWORD,
-    });
-
-    if (error) {
-        console.error('Error signing in with password:', error);
-        throw new Error('Error signing in with password');
-    }
-
+  try {
+    await signInWithEmailAndPassword(auth, SEED_USER.EMAIL, SEED_USER.PASSWORD);
     redirect(Routes.HOME);
+  } catch (error) {
+    console.error('Error signing in with password:', error);
+    throw new Error('Error signing in with password');
+  }
 }

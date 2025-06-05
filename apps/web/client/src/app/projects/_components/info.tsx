@@ -1,4 +1,4 @@
-import { getFileUrlFromStorage } from '@/utils/supabase/client';
+import { getFileUrlFromStorage } from '@/utils/firebase/storage';
 import type { Project } from '@onlook/models';
 import { timeAgo } from '@onlook/utility';
 import { observer } from 'mobx-react-lite';
@@ -33,7 +33,8 @@ export const ProjectInfo = observer(
 
         const loadPreviewImg = async () => {
             if (project.metadata.previewImg && project.metadata.previewImg.type === 'storage' && project.metadata.previewImg.storagePath?.path) {
-                const img = await getFileUrlFromStorage(project.metadata.previewImg.storagePath.bucket, project.metadata.previewImg.storagePath?.path ?? '');
+                const path = `${project.metadata.previewImg.storagePath.bucket}/${project.metadata.previewImg.storagePath?.path ?? ''}`;
+                const img = await getFileUrlFromStorage(path);
                 setPreviewImg(img);
                 return img;
             } else {

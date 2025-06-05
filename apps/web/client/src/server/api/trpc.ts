@@ -10,11 +10,10 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
-import type { User } from '@supabase/supabase-js';
+import type { UserRecord } from 'firebase-admin/auth';
 import type { SetRequiredDeep } from 'type-fest';
 
-import { createClient } from '@/utils/supabase/server';
-import { db } from '@onlook/db/src/client';
+import { authAdmin, dbAdmin } from '@/utils/supabase/server'; // This path is now a misnomer, but we'll keep it for now to avoid breaking other imports
 
 /**
  * 1. CONTEXT
@@ -29,22 +28,34 @@ import { db } from '@onlook/db/src/client';
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error,
-    } = await supabase.auth.getUser();
+    const { headers } = opts;
+    const token = headers.get('authorization')?.split(' ')[1];
 
-    if (error) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: error.message });
+    if (!token) {
+        return {
+            db: dbAdmin,
+            user: null,
+            ...opts,
+        };
     }
 
-    return {
-        db,
-        supabase,
-        user,
-        ...opts,
-    };
+    try {
+        const decodedToken = await authAdmin.verifyIdToken(token);
+        const user = await authAdmin.getUser(decodedToken.uid);
+
+        return {
+            db: dbAdmin,
+            user,
+            ...opts,
+        };
+    } catch (error) {
+        console.error('Error verifying auth token:', error);
+        return {
+            db: dbAdmin,
+            user: null,
+            ...opts,
+        };
+    }
 };
 
 /**
@@ -143,7 +154,7 @@ export const protectedProcedure = t.procedure.use(timingMiddleware).use(({ ctx, 
     return next({
         ctx: {
             // infers the `session` as non-nullable
-            user: ctx.user as SetRequiredDeep<User, 'email'>,
+            user: ctx.user as SetRequiredDeep<UserRecord, 'email'>,
             db: ctx.db,
         },
     });

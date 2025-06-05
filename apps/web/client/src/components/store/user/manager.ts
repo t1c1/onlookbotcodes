@@ -1,13 +1,13 @@
-import { createClient } from '@/utils/supabase/client';
-import type { UserMetadata } from '@onlook/models';
-import type { User as AuthUser } from '@supabase/supabase-js';
+import { onAuthStateChanged, signOut, type User as AuthUser } from 'firebase/auth';
 import { makeAutoObservable } from 'mobx';
+
+import { auth } from '@onlook/db/firebase';
+import type { UserMetadata } from '@onlook/models';
 import { LanguageManager } from './language';
 import { UserSettingsManager } from './settings';
 import { SubscriptionManager } from './subscription';
 
 export class UserManager {
-    readonly supabase = createClient();
     readonly settings: UserSettingsManager;
     readonly subscription = new SubscriptionManager();
     readonly language = new LanguageManager();
@@ -16,32 +16,26 @@ export class UserManager {
     constructor() {
         makeAutoObservable(this);
         this.settings = new UserSettingsManager(this);
-        this.fetchUser();
-    }
-
-    async fetchUser() {
-        const { data, error } = await this.supabase.auth.getUser();
-        if (error) {
-            console.error(error);
-            return;
-        }
-        this.user = this.fromAuthUser(data.user);
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                this.user = this.fromAuthUser(user);
+            } else {
+                this.user = null;
+            }
+        });
     }
 
     fromAuthUser(authUser: AuthUser): UserMetadata {
         return {
-            id: authUser.id,
-            name:
-                authUser.user_metadata?.full_name ||
-                authUser.user_metadata?.name ||
-                authUser.email,
-            email: authUser.email,
-            avatarUrl: authUser.user_metadata?.avatar_url,
+            id: authUser.uid,
+            name: authUser.displayName ?? authUser.email ?? undefined,
+            email: authUser.email ?? undefined,
+            avatarUrl: authUser.photoURL ?? undefined,
         };
     }
 
     async signOut() {
-        await this.supabase.auth.signOut();
+        await signOut(auth);
         this.user = null;
     }
 }

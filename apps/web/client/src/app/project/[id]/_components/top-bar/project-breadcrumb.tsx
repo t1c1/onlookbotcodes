@@ -1,7 +1,7 @@
 import { useEditorEngine } from '@/components/store/editor';
 import { useProjectManager } from '@/components/store/project';
 import { Routes } from '@/utils/constants';
-import { uploadBlobToStorage } from '@/utils/supabase/client';
+import { uploadBlobToStorage } from '@/utils/firebase/storage';
 import { STORAGE_BUCKETS } from '@onlook/constants';
 import { Button } from '@onlook/ui/button';
 import {
@@ -71,7 +71,7 @@ export const ProjectBreadcrumb = observer(() => {
                         type: 'storage',
                         storagePath: {
                             bucket: STORAGE_BUCKETS.PREVIEW_IMAGES,
-                            path: data?.path,
+                            path: data?.ref.fullPath,
                         },
                     }
                 }
@@ -85,7 +85,8 @@ export const ProjectBreadcrumb = observer(() => {
             return;
         }
         const file = base64ToBlob(screenshotData, mimeType);
-        const data = await uploadBlobToStorage(STORAGE_BUCKETS.PREVIEW_IMAGES, getScreenshotPath(project.id, mimeType), file, {
+        const path = `${STORAGE_BUCKETS.PREVIEW_IMAGES}/${getScreenshotPath(project.id, mimeType)}`;
+        const data = await uploadBlobToStorage(path, file, {
             contentType: mimeType,
         });
         if (!data) {

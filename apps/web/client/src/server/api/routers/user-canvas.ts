@@ -1,45 +1,29 @@
-import { canvases, toCanvas, userCanvases, userCanvasUpdateSchema } from '@onlook/db';
-import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
+import { Collection } from '@onlook/db';
 
 export const userCanvasRouter = createTRPCRouter({
     get: protectedProcedure
         .input(
             z.object({
                 projectId: z.string(),
+                canvasId: z.string(),
             }),
         )
         .query(async ({ ctx, input }) => {
-            const userCanvas = await ctx.db.query.userCanvases.findFirst({
-                where: and(
-                    eq(canvases.projectId, input.projectId),
-                    eq(userCanvases.userId, ctx.user.id),
-                ),
-                with: {
-                    canvas: true,
-                },
-            });
+            const userCanvasDoc = await ctx.db.collection(Collection.PROJECTS).doc(input.projectId).collection(Collection.CANVAS).doc(input.canvasId).collection('userCanvases').doc(ctx.user.uid).get();
 
-            if (!userCanvas) {
+            if (!userCanvasDoc.exists) {
                 throw new Error('User canvas not found');
             }
-            return toCanvas(userCanvas);
+            return userCanvasDoc.data();
         }),
-    update: protectedProcedure.input(userCanvasUpdateSchema).mutation(async ({ ctx, input }) => {
+    update: protectedProcedure.input(z.any()).mutation(async ({ ctx, input }) => { // Loosening type for now
         try {
             if (!input.canvasId) {
                 throw new Error('Canvas ID is required');
             }
-            await ctx.db
-                .update(userCanvases)
-                .set(input)
-                .where(
-                    and(
-                        eq(userCanvases.canvasId, input.canvasId),
-                        eq(userCanvases.userId, ctx.user.id),
-                    ),
-                );
+            await ctx.db.collection(Collection.PROJECTS).doc(input.projectId).collection(Collection.CANVAS).doc(input.canvasId).collection('userCanvases').doc(ctx.user.uid).set(input, { merge: true });
             return true;
         } catch (error) {
             console.error('Error updating user canvas', error);
