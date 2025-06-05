@@ -1,0 +1,19 @@
+// For more information on securing your app, visit:
+// https://firebase.google.com/docs/firestore/security/get-started
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // By default, deny all reads and writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // TODO: Add your collection rules here.
+    // For example, to allow reads on a 'users' collection for authenticated users:
+    // match /users/{userId} {
+    //   allow read: if request.auth != null && request.auth.uid == userId;
+    // }
+  }
+} 

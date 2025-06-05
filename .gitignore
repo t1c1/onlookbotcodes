@@ -44,3 +44,6 @@ yarn.lock
 .env.production.local
 
 mise.toml
+
+# Ignore Google Cloud credentials
+service-account.json

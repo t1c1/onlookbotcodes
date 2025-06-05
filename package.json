@@ -14,7 +14,8 @@
         "apps/*",
         "tooling/*",
         "apps/web/*",
-        "docs"
+        "docs",
+        "functions"
     ],
     "scripts": {
         "build": "bun --filter @onlook/web build:client",

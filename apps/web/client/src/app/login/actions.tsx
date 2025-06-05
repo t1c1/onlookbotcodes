@@ -3,6 +3,7 @@
 import {
   getRedirectResult,
   GoogleAuthProvider,
+  GithubAuthProvider,
   signInWithEmailAndPassword,
   signInWithRedirect,
 } from 'firebase/auth';
@@ -16,16 +17,19 @@ import { Routes } from '@/utils/constants';
 
 export async function login(provider: SignInMethod) {
   const origin = (await headers()).get('origin');
-  const googleProvider = new GoogleAuthProvider();
-
-  // We can add more providers here based on the `provider` argument
+  
+  let authProvider;
   switch (provider) {
     case 'google':
-      await signInWithRedirect(auth, googleProvider);
+      authProvider = new GoogleAuthProvider();
+      break;
+    case 'github':
+      authProvider = new GithubAuthProvider();
       break;
     default:
       throw new Error(`Provider ${provider} not supported`);
   }
+  await signInWithRedirect(auth, authProvider);
 }
 
 export async function handleRedirect() {

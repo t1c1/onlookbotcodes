@@ -1,5 +1,6 @@
 'use client';
 
+import { useMediaQuery } from '@onlook/ui/hooks';
 import { Icons } from '@onlook/ui/icons/index';
 import React, { useEffect, useState } from 'react';
 
@@ -11,19 +12,9 @@ interface Contributor {
 
 // Floating Circles: two concentric rings
 const FloatingRings = () => {
-    const [isMd, setIsMd] = React.useState(
-        typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false
-    );
+    const isMd = useMediaQuery('(min-width: 768px)');
     const [contributors, setContributors] = useState<Contributor[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    React.useEffect(() => {
-        const media = window.matchMedia('(min-width: 768px)');
-        const listener = () => setIsMd(media.matches);
-        media.addEventListener('change', listener);
-        setIsMd(media.matches);
-        return () => media.removeEventListener('change', listener);
-    }, []);
 
     useEffect(() => {
         const fetchContributors = async () => {
@@ -74,10 +65,10 @@ const FloatingRings = () => {
                             key={`inner-${i}`}
                             className="absolute rounded-full bg-white/20 border border-foreground-primary/40 border-[0.5px] shadow-lg overflow-hidden"
                             style={{
-                                width: 56,
-                                height: 56,
-                                left: x - 28,
-                                top: y - 28,
+                                width: '56px',
+                                height: '56px',
+                                left: `${x - 28}px`,
+                                top: `${y - 28}px`,
                                 animation: 'counter-spin 280s linear infinite',
                                 transformOrigin: 'center center'
                             }}
@@ -107,10 +98,10 @@ const FloatingRings = () => {
                             key={`outer-${i}`}
                             className="absolute rounded-full bg-white/20 border border-foreground-primary/40 border-[0.5px] shadow-lg overflow-hidden"
                             style={{
-                                width: 56,
-                                height: 56,
-                                left: x - 28,
-                                top: y - 28,
+                                width: '56px',
+                                height: '56px',
+                                left: `${x - 28}px`,
+                                top: `${y - 28}px`,
                                 animation: 'counter-spin-reverse 290s linear infinite',
                                 transformOrigin: 'center center'
                             }}
@@ -207,16 +198,19 @@ export function ContributorSection({
                     }
                 `}</style>
                 <h2 className="text-foreground-primary text-3xl md:text-4xl font-light text-center mb-2">
-                    Supported by You &<br />
-                    {isLoading ? '...' : starCount} other builders
+                    Powered by Onlook
                 </h2>
-                <p className="text-foreground-secondary text-regular text-center mb-8 max-w-xl">Join our mission and be a part of changing<br />the way people craft software</p>
+                <p className="text-foreground-secondary text-regular text-center mb-8 max-w-xl">
+                    Join our mission and be a part of changing
+                    <br />
+                    the way people craft software
+                </p>
                 <div className="flex gap-4 flex-col md:flex-row w-full justify-center items-center">
                     <button
                         onClick={() => window.open(githubLink, '_blank')}
                         className="bg-foreground-primary text-background-primary text-regularPlus rounded-lg px-6 py-3 flex items-center gap-2 shadow hover:bg-foreground-primary/80 transition cursor-pointer"
                     >
-                        Contribute to Onlook
+                        Contribute to Botcodes
                         <Icons.GitHubLogo className="w-4.5 h-4.5" />
                     </button>
                     <button

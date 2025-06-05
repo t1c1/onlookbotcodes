@@ -1,0 +1,14 @@
+{
+    "extends": "../../tooling/typescript/base.json",
+    "compilerOptions": {
+        "outDir": "lib",
+        "rootDir": "src",
+        "module": "commonjs"
+    },
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+} 

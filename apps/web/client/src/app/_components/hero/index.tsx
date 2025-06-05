@@ -23,9 +23,9 @@ export function Hero() {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     style={{ willChange: "opacity, filter", transform: "translateZ(0)" }}
                 >
-                    Make your<br />
-                    <span className="font-light">designs </span>
-                    <span className={`italic font-normal ${vujahdayScript.className} text-[4.75rem] ml-1 leading-[1.0]`}>real</span>
+                    Analyze your<br />
+                    <span className="font-light">golf </span>
+                    <span className={`italic font-normal ${vujahdayScript.className} text-[4.75rem] ml-1 leading-[1.0]`}>swing</span>
                 </motion.h1>
                 <motion.p
                     className="text-lg text-foreground-secondary max-w-xl text-center mt-2"
@@ -34,9 +34,9 @@ export function Hero() {
                     transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
                     style={{ willChange: "opacity, filter", transform: "translateZ(0)" }}
                 >
-                    Onlook is a next-generation visual code editor<br />
+                    botcodes.com is a next-generation visual code editor<br />
                     that lets designers and product managers craft<br />
-                    web experiences with AI
+                    web experiences with AI, powered by Onlook
                 </motion.p>
                 <HighDemand isMounted={isMounted} />
                 <CreateError />
@@ -59,11 +59,11 @@ export function Hero() {
                     transition={{ duration: 0.6, delay: 0.45, ease: "easeOut" }}
                     style={{ willChange: "opacity, filter", transform: "translateZ(0)" }}
                 >
-                    No Credit Card Required &bull; Get a Site in Seconds
+                    No Credit Card Required • Get an Analysis in Seconds
                 </motion.div>
             </div>
             <div className="sm:hidden text-balance flex flex-col gap-4 items-center relative z-20 px-10">
-                Onlook isn’t ready for Mobile – Please open on a larger screen
+                botcodes.com isn't ready for Mobile – Please open on a larger screen
             </div>
         </div>
     );

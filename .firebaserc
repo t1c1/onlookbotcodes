@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "botcodes-1cdc0"
+  },
+  "targets": {
+    "botcodes-1cdc0": {
+      "hosting": {
+        "web": [
+          "onlook"
+        ]
+      }
+    }
   }
 }
